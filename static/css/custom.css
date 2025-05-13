@@ -1,0 +1,100 @@
+/**
+ * Custom styles for EDS Alarm Monitor
+ */
+
+/* Dashboard cards */
+.card {
+    margin-bottom: 1.5rem;
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card-header {
+    background-color: rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+/* Status indicators */
+.status-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.status-connected {
+    color: var(--bs-success);
+}
+
+.status-disconnected {
+    color: var(--bs-danger);
+}
+
+.status-unknown {
+    color: var(--bs-secondary);
+}
+
+/* Table styling */
+.table-responsive {
+    border-radius: 0.25rem;
+    overflow: hidden;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+}
+
+/* Pagination */
+.pagination {
+    margin-top: 1.5rem;
+    margin-bottom: 0;
+}
+
+/* Form controls */
+.form-control:focus {
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+/* Footer */
+.footer {
+    border-top: 1px solid rgba(0, 0, 0, 0.125);
+    padding-top: 1rem;
+    margin-top: 2rem;
+}
+
+/* Alert badges */
+.badge.severity-critical,
+.badge.severity-high {
+    background-color: var(--bs-danger);
+}
+
+.badge.severity-medium {
+    background-color: var(--bs-warning);
+}
+
+.badge.severity-low {
+    background-color: var(--bs-info);
+}
+
+.badge.status-active {
+    background-color: var(--bs-danger);
+}
+
+.badge.status-cleared {
+    background-color: var(--bs-success);
+}
+
+.badge.status-acknowledged {
+    background-color: var(--bs-info);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .btn-group .btn {
+        margin-bottom: 0.5rem;
+    }
+}

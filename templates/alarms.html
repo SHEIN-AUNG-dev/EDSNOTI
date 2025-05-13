@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Alarm History</h5>
+        
+        <div class="d-flex align-items-center">
+            <!-- Status filter buttons -->
+            <div class="btn-group me-2" role="group" aria-label="Status filter">
+                {% for status in status_options %}
+                <a href="{{ url_for('alarms', status=status) }}" class="btn btn-{{ 'primary' if status == status_filter else 'outline-primary' }}">
+                    {{ status }}
+                </a>
+                {% endfor %}
+            </div>
+            
+            <div class="btn-group" role="group">
+                <button id="clear-alarms-btn" class="btn btn-outline-danger">
+                    <i class="fas fa-broom me-1"></i> Clear Alarms
+                </button>
+                <button id="refresh-alarms" class="btn btn-outline-primary">
+                    <i class="fas fa-sync-alt me-1"></i> Refresh
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="filterDropdown" 
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-filter me-1"></i> Filter
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterDropdown">
+                        <li><h6 class="dropdown-header">Severity</h6></li>
+                        <li>
+                            <div class="form-check ms-3">
+                                <input class="form-check-input filter-severity" type="checkbox" id="severityCritical" value="CRITICAL" checked>
+                                <label class="form-check-label" for="severityCritical">Critical</label>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="form-check ms-3">
+                                <input class="form-check-input filter-severity" type="checkbox" id="severityHigh" value="HIGH" checked>
+                                <label class="form-check-label" for="severityHigh">High</label>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="form-check ms-3">
+                                <input class="form-check-input filter-severity" type="checkbox" id="severityMedium" value="MEDIUM" checked>
+                                <label class="form-check-label" for="severityMedium">Medium</label>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="form-check ms-3">
+                                <input class="form-check-input filter-severity" type="checkbox" id="severityLow" value="LOW" checked>
+                                <label class="form-check-label" for="severityLow">Low</label>
+                            </div>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" id="applyFilters">Apply Filters</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>ID</th>
+                        <th>Source</th>
+                        <th>Description</th>
+                        <th>Severity</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="alarms-table">
+                    {% if alarms.items %}
+                        {% for alarm in alarms.items %}
+                            <tr data-severity="{{ alarm.severity }}" data-status="{{ alarm.status }}">
+                                <td>{{ alarm.event_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                <td>{{ alarm.alarm_id }}</td>
+                                <td>{{ alarm.source }}</td>
+                                <td>{{ alarm.description }}</td>
+                                <td>
+                                    <span class="badge rounded-pill bg-{{ 'danger' if alarm.severity == 'HIGH' or alarm.severity == 'CRITICAL' else 'warning' if alarm.severity == 'MEDIUM' else 'info' }}">
+                                        {{ alarm.severity }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill bg-{{ 'danger' if alarm.status == 'ACTIVE' else 'success' if alarm.status == 'CLEARED' else 'info' }}">
+                                        {{ alarm.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">No alarms found</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if alarms.pages > 1 %}
+            <nav aria-label="Alarm history pagination">
+                <ul class="pagination justify-content-center">
+                    {% if alarms.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('alarms', page=alarms.prev_num, status=status_filter) }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for page_num in alarms.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if page_num %}
+                            {% if page_num == alarms.page %}
+                                <li class="page-item active">
+                                    <a class="page-link" href="{{ url_for('alarms', page=page_num, status=status_filter) }}">{{ page_num }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('alarms', page=page_num, status=status_filter) }}">{{ page_num }}</a>
+                                </li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#">...</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if alarms.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('alarms', page=alarms.next_num, status=status_filter) }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Refresh button functionality
+        const refreshButton = document.getElementById('refresh-alarms');
+        if (refreshButton) {
+            refreshButton.addEventListener('click', function() {
+                location.reload();
+            });
+        }
+        
+        // Filter functionality
+        const applyFiltersButton = document.getElementById('applyFilters');
+        if (applyFiltersButton) {
+            applyFiltersButton.addEventListener('click', function() {
+                applyFilters();
+            });
+        }
+        
+        function applyFilters() {
+            // Get selected severity filters
+            const selectedSeverities = Array.from(
+                document.querySelectorAll('.filter-severity:checked')
+            ).map(checkbox => checkbox.value);
+            
+            // Get selected status filters
+            const selectedStatuses = Array.from(
+                document.querySelectorAll('.filter-status:checked')
+            ).map(checkbox => checkbox.value);
+            
+            // Get all alarm rows
+            const alarmRows = document.querySelectorAll('#alarms-table tr');
+            
+            // Apply filters
+            alarmRows.forEach(row => {
+                const rowSeverity = row.getAttribute('data-severity');
+                const rowStatus = row.getAttribute('data-status');
+                
+                // If the row has both attributes, filter it
+                if (rowSeverity && rowStatus) {
+                    const severityMatch = selectedSeverities.includes(rowSeverity);
+                    const statusMatch = selectedStatuses.includes(rowStatus);
+                    
+                    // Show row only if both severity and status match the filters
+                    if (severityMatch && statusMatch) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+        }
+        
+        // Set up Clear Alarms button click handler
+        const clearAlarmsBtn = document.getElementById('clear-alarms-btn');
+        if (clearAlarmsBtn) {
+            clearAlarmsBtn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to clear all alarms? This will mark them as CLEARED. New alarms will still be detected if they exist.')) {
+                    // Show loading state
+                    const button = this;
+                    const originalContent = button.innerHTML;
+                    button.disabled = true;
+                    button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Clearing...';
+                    
+                    // Call the clear alarms API
+                    fetch('/api/alarms/clear', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Show success message
+                            const alertDiv = document.createElement('div');
+                            alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                            alertDiv.setAttribute('role', 'alert');
+                            alertDiv.innerHTML = `
+                                <i class="fas fa-check-circle me-2"></i>
+                                Alarms cleared successfully
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            `;
+                            document.querySelector('.card-body').prepend(alertDiv);
+                            
+                            // Reload the page after a short delay to show fresh data
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            // Show error message
+                            alert('Error clearing alarms: ' + data.error);
+                            button.disabled = false;
+                            button.innerHTML = originalContent;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error clearing alarms:', error);
+                        alert('Failed to clear alarms. Please try again.');
+                        button.disabled = false;
+                        button.innerHTML = originalContent;
+                    });
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
